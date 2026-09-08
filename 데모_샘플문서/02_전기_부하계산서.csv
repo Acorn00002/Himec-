@@ -1,0 +1,5 @@
+﻿△△ 폐수처리시설 개선사업 - 전동기 부하 계산서 (Motor Load Schedule) / EL-CALC-007 Rev.A
+Tag,Description,Power(kW),Voltage(V),Efficiency(%),PowerFactor,FLC(A),Cable(mm2),Breaker(A)
+P-101,Transfer Pump (Duty),15,380,89.5,0.86,29.1,25,40
+P-102,Transfer Pump (Standby),15,380,89.5,0.86,29.1,25,40
+M-101,Agitator Motor,7.5,380,89.1,0.83,15.2,6,25

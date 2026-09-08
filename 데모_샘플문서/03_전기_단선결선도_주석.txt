@@ -1,0 +1,25 @@
+ELECTRICAL SINGLE LINE DIAGRAM - FEEDER NOTES (title block & schedule extract)
+Project: WWTP Improvement   Drawing: E-201   Rev: C   Date: 2026-08-19
+
+TAG          : P-101
+SERVICE      : TRANSFER PUMP (DUTY)
+RATED OUTPUT : 18.5 kW
+VOLTAGE      : 440 V , 3PH , 60Hz
+CABLE        : 4C x 25 SQMM , XLPE
+BREAKER      : 40 A
+
+TAG          : P-102
+SERVICE      : TRANSFER PUMP (STANDBY)
+RATED OUTPUT : 15 kW
+VOLTAGE      : 380 V , 3PH , 60Hz
+CABLE        : 4C x 25 SQMM
+BREAKER      : 40 A
+
+TAG          : M-101
+SERVICE      : AGITATOR MOTOR
+RATED OUTPUT : 7.5 kW
+VOLTAGE      : 380 V
+CABLE        : 4C x 6 SQMM
+BREAKER      : 25 A
+
+NOTE: Final cable sizing to be confirmed against load calculation EL-CALC-007.

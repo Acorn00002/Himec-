@@ -1,0 +1,28 @@
+# 바이너리로 취급 (줄바꿈 변환 금지 — PDF/이미지/엑셀 손상 방지)
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.xlsx  binary
+*.xls   binary
+*.db    binary
+*.woff  binary
+*.woff2 binary
+
+# 소스/텍스트는 저장소 안에서 LF로 통일
+*.py    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.json  text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.csv   text eol=lf
+*.html  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.gitignore text eol=lf
