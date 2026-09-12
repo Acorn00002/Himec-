@@ -41,9 +41,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-16 items-center gap-2 border-b px-5">
           <ShieldAlert className="size-5 text-blue-600 dark:text-blue-400" />
           <span className="text-sm font-semibold leading-tight">
-            설계문서 교차검증
+            Engineering CrossCheck AI
             <br />
-            <span className="text-xs font-medium text-muted-foreground">Engineering CrossCheck Agent</span>
+            <span className="text-xs font-medium text-muted-foreground">설계문서 교차검증</span>
           </span>
         </div>
         <nav className="flex-1 space-y-1 p-3">

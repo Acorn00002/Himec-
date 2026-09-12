@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: crosscheck-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: GEMINI_API_KEY
+        sync: false # Render 대시보드에서 직접 입력 (비밀값이라 이 파일에 넣지 않음)
+      - key: CORS_ORIGINS
+        value: http://localhost:3000 # 배포 후 Vercel 도메인을 콤마로 추가하세요 (예: https://xxx.vercel.app)
+      - key: DATABASE_URL
+        value: sqlite:///./app.db # 무료 플랜은 재배포 시 초기화됨 — 데모용으로는 충분

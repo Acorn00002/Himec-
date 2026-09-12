@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "설계문서 교차검증 에이전트",
+  title: "Engineering CrossCheck AI",
   description: "여러 설계 문서에 흩어진 동일 설비의 정보를 교차 검증해 불일치와 영향 가능 항목을 찾는 엔지니어링 검토 지원 시스템",
 };
 

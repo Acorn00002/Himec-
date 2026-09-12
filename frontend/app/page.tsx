@@ -90,7 +90,8 @@ export default function LandingPage() {
           <ShieldAlert className="size-3.5 text-blue-600 dark:text-blue-400" />
           설계 검토 보조 도구 — 설계를 승인하지 않고, 검토를 돕습니다
         </div>
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">설계문서 교차검증 에이전트</h1>
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Engineering CrossCheck AI</h1>
+        <p className="mt-2 text-sm font-medium text-muted-foreground">설계문서 교차검증 시스템</p>
         <p className="mx-auto mt-5 max-w-3xl text-balance text-lg text-muted-foreground">
           여러 설계 문서에 흩어진 <span className="font-semibold text-foreground">동일 설비의 정보</span>를 AI가 교차 검증하여
           문서 간 불일치와 영향 가능 항목을 찾아주는 <span className="font-semibold text-foreground">엔지니어링 검토 지원 시스템</span>입니다.

@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Engineering CrossCheck AI — 데모</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --fg: #17181a;
+    --muted: #6b7280;
+    --muted-bg: #f1f2f4;
+    --border: #e4e6ea;
+    --accent: #2563eb;
+    --hi: #d03b3b;         --hi-fg: #a32e2e;
+    --md: #ec835a;         --md-fg: #b35a37;
+    --lo: #c98500;         --lo-fg: #8f6000;
+    --info: #0ca30c;       --info-fg: #0a7a0a;
+    --blue-bg: #eff4ff;    --blue-fg: #1d4ed8;   --blue-bd: #c7d7fe;
+    --green-bg: #ecfdf3;   --green-fg: #067647;  --green-bd: #a9e5c4;
+    --amber-bg: #fff8e6;   --amber-fg: #8f6000;  --amber-bd: #f2dca0;
+  }
+  :root.dark {
+    --bg: #0e0f11;
+    --card: #17191c;
+    --fg: #ededed;
+    --muted: #9aa0a6;
+    --muted-bg: #232629;
+    --border: #2b2f33;
+    --accent: #5b8bf5;
+    --hi-fg: #f19a9a;  --md-fg: #f0a884;  --lo-fg: #e0b352;  --info-fg: #7fce7f;
+    --blue-bg: #16233f;  --blue-fg: #93b4fb;  --blue-bd: #26406e;
+    --green-bg: #12291d;  --green-fg: #7ad3a3;  --green-bd: #1f4733;
+    --amber-bg: #2a2410;  --amber-fg: #e0b352;  --amber-bd: #4a3f18;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  /* layout */
+  .shell { display: flex; min-height: 100vh; }
+  .side { width: 232px; flex-shrink: 0; border-right: 1px solid var(--border); background: var(--card); display: flex; flex-direction: column; }
+  .side .brand { padding: 16px 18px; border-bottom: 1px solid var(--border); font-weight: 700; line-height: 1.3; }
+  .side .brand small { display:block; font-weight: 500; color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .side nav { padding: 12px; flex: 1; }
+  .side nav a { display: block; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 500; margin-bottom: 2px; }
+  .side nav a.active { background: var(--accent); color: #fff; }
+  .side .foot { padding: 12px; border-top: 1px solid var(--border); font-size: 12px; }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { border-bottom: 1px solid var(--border); background: var(--card); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .badge-demo { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #d6bbfb; background: #f5f0ff; color: #6b3fd6; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  :root.dark .badge-demo { border-color:#4a2f7a; background:#241536; color:#c4a5ff; }
+  .disclaimer { border-bottom: 1px solid var(--border); background: var(--amber-bg); color: var(--amber-fg); font-size: 12px; padding: 7px 24px; }
+  .content { padding: 24px; max-width: 1120px; width: 100%; margin: 0 auto; }
+
+  /* toggle */
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; padding: 2px; background: var(--card); }
+  .seg button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 6px; cursor: pointer; }
+  .seg button.on { background: var(--muted-bg); color: var(--fg); }
+
+  h1.page { font-size: 22px; font-weight: 650; margin: 0 0 4px; }
+  .lead { color: var(--muted); font-size: 13px; max-width: 640px; margin: 0 0 20px; }
+  .lead b { color: var(--fg); font-weight: 600; }
+
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .kpi .lbl { font-size: 11px; letter-spacing: .02em; color: var(--muted); font-weight: 600; }
+  .kpi .val { font-size: 30px; font-weight: 750; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .kpi .val.hi { color: var(--hi); }
+
+  .sec { margin-top: 18px; }
+  .sec h2 { font-size: 14px; font-weight: 650; margin: 0; }
+  .sec .sub { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+
+  /* how it works */
+  .pipe { display: flex; flex-wrap: wrap; gap: 6px 4px; margin-top: 14px; align-items: center; }
+  .pipe .step { border: 1px solid var(--border); background: var(--muted-bg); border-radius: 7px; padding: 5px 9px; font-size: 12px; font-weight: 600; }
+  .pipe .arw { color: var(--muted); }
+  .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .role { border: 1px solid; border-radius: 10px; padding: 11px 12px; font-size: 12px; }
+  .role.ai { border-color: var(--blue-bd); background: var(--blue-bg); }
+  .role.ai b { color: var(--blue-fg); }
+  .role.eng { border-color: var(--green-bd); background: var(--green-bg); }
+  .role.eng b { color: var(--green-fg); }
+  .role ul { margin: 6px 0 0; padding-left: 15px; color: var(--fg); }
+  .note { font-size: 12px; color: var(--muted); margin-top: 12px; }
+
+  .row2 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-top: 14px; }
+
+  /* severity bars */
+  .bars { margin-top: 12px; display: grid; gap: 9px; }
+  .bar { display: grid; grid-template-columns: 44px 1fr 28px; align-items: center; gap: 8px; font-size: 12px; }
+  .bar .track { height: 20px; border-radius: 5px; background: var(--muted-bg); overflow: hidden; }
+  .bar .fill { height: 100%; border-radius: 5px; }
+  .bar .n { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .prog { height: 8px; background: var(--muted-bg); border-radius: 999px; overflow: hidden; margin-top: 12px; }
+  .prog > i { display: block; height: 100%; background: var(--accent); }
+  .prog-num { font-size: 20px; font-weight: 750; margin-top: 18px; }
+  .prog-num .ok { color: var(--info-fg); }
+  .prog-legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .prog-legend b { color: var(--fg); }
+
+  /* findings list */
+  .find { margin-top: 14px; }
+  .find button {
+    width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 4px; cursor: pointer; font: inherit; color: inherit;
+  }
+  .find button:first-child { border-top: 0; }
+  .find button:hover { background: var(--muted-bg); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .sev { display: inline-flex; align-items: center; gap: 4px; border: 1px solid; border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
+  .sev.HIGH   { color: var(--hi-fg);   background: color-mix(in srgb, var(--hi) 12%, transparent);   border-color: color-mix(in srgb, var(--hi) 32%, transparent); }
+  .sev.MEDIUM { color: var(--md-fg);   background: color-mix(in srgb, var(--md) 12%, transparent);   border-color: color-mix(in srgb, var(--md) 32%, transparent); }
+  .sev.LOW    { color: var(--lo-fg);   background: color-mix(in srgb, #fab219 15%, transparent);     border-color: color-mix(in srgb, #fab219 40%, transparent); }
+  .sev.INFO   { color: var(--info-fg); background: color-mix(in srgb, var(--info) 12%, transparent); border-color: color-mix(in srgb, var(--info) 32%, transparent); }
+  .tag { border-radius: 5px; background: var(--muted-bg); padding: 1px 6px; font-size: 11px; font-weight: 700; }
+  .disp { border-radius: 999px; border: 1px solid; padding: 1px 8px; font-size: 11px; font-weight: 600; }
+  .disp.action_required { color: var(--hi-fg); background: color-mix(in srgb, var(--hi) 10%, transparent); border-color: color-mix(in srgb, var(--hi) 30%, transparent); }
+  .disp.intentional { color: var(--blue-fg); background: var(--blue-bg); border-color: var(--blue-bd); }
+  .disp.resolved { color: var(--info-fg); background: color-mix(in srgb, var(--info) 10%, transparent); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
+  .find .ttl { font-size: 13.5px; font-weight: 600; margin-top: 5px; }
+  .find .diff { font-size: 12px; color: var(--hi-fg); margin-top: 2px; font-family: ui-monospace, monospace; }
+  .find .impact-n { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+  /* drawer */
+  .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.28); opacity: 0; pointer-events: none; transition: opacity .18s; z-index: 40; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100vh; width: 560px; max-width: 92vw; background: var(--card);
+    border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .2s; z-index: 50; overflow-y: auto;
+    box-shadow: -12px 0 40px rgba(0,0,0,.12);
+  }
+  .drawer.show { transform: none; }
+  .drawer .dh { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .drawer .dh .x { float: right; border: 0; background: none; font-size: 20px; line-height: 1; color: var(--muted); cursor: pointer; }
+  .drawer .dh h3 { font-size: 16px; margin: 10px 0 6px; font-weight: 650; }
+  .drawer .dh p { font-size: 13px; color: var(--muted); margin: 0; }
+  .drawer .db { padding: 20px; }
+  .drawer section + section { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--border); }
+  .drawer h4 { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 700; }
+
+  .callout { border: 1px solid; border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; }
+  .callout.mis { color: var(--hi-fg); background: color-mix(in srgb, var(--hi) 6%, transparent); border-color: color-mix(in srgb, var(--hi) 30%, transparent); }
+  .callout.mis .mono { font-weight: 700; }
+  .callout.miss { color: var(--amber-fg); background: var(--amber-bg); border-color: var(--amber-bd); }
+
+  table.vt { width: 100%; border-collapse: collapse; margin-top: 8px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; font-size: 13px; }
+  table.vt th { background: var(--muted-bg); color: var(--muted); font-size: 11px; font-weight: 600; text-align: left; padding: 7px 12px; }
+  table.vt th:last-child, table.vt td:last-child { text-align: right; }
+  table.vt td { padding: 8px 12px; border-top: 1px solid var(--border); }
+  table.vt td.v { font-family: ui-monospace, monospace; }
+  table.vt td.v.diff { color: var(--hi-fg); font-weight: 700; }
+  .src-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .flow { display: grid; gap: 4px; margin-top: 6px; }
+  .flow .node { border: 1px solid var(--blue-bd); background: var(--blue-bg); color: var(--blue-fg); border-radius: 9px; padding: 8px 10px; text-align: center; font-size: 13px; }
+  .flow .node.root { border-color: color-mix(in srgb, var(--hi) 30%, transparent); background: color-mix(in srgb, var(--hi) 6%, transparent); color: var(--hi-fg); font-weight: 650; }
+  .flow .dn { text-align: center; color: var(--muted); font-size: 12px; }
+  .flow-note { font-size: 12px; color: var(--muted); background: var(--muted-bg); border-radius: 9px; padding: 9px 11px; margin-top: 10px; line-height: 1.6; }
+
+  .why { background: var(--muted-bg); border-radius: 10px; padding: 12px; font-size: 13px; line-height: 1.65; }
+
+  .verify { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .verify > div { border: 1px solid; border-radius: 9px; padding: 9px 11px; font-size: 12px; }
+  .verify .a { border-color: var(--blue-bd); background: var(--blue-bg); }
+  .verify .a b { color: var(--blue-fg); }
+  .verify .e { border-color: var(--green-bd); background: var(--green-bg); }
+  .verify .e b { color: var(--green-fg); }
+
+  .review { border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-size: 13px; }
+  .review .meta { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+  .review .empty { color: var(--muted); }
+
+  .foot-disc { font-size: 12px; color: var(--muted); margin-top: 22px; }
+
+  @media (max-width: 860px) {
+    .side { display: none; }
+    .grid4 { grid-template-columns: 1fr 1fr; }
+    .row2 { grid-template-columns: 1fr; }
+    .roles, .verify { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand">Engineering CrossCheck AI<small>설계문서 교차검증</small></div>
+    <nav>
+      <a class="active" href="#">대시보드</a>
+      <a href="#" onclick="return false" style="opacity:.5">설비 탐색</a>
+      <a href="#" onclick="return false" style="opacity:.5">문서 업로드</a>
+    </nav>
+    <div class="foot">
+      <a href="https://github.com/Acorn00002/Himec-" target="_blank" rel="noopener">GitHub 저장소 →</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span style="font-weight:600">Demo Project — Motor &amp; Pump Package</span>
+        <span class="badge-demo">● 데모 데이터 (실제 파일 분석 아님)</span>
+      </div>
+      <div class="seg" id="themeSeg">
+        <button data-t="light">라이트</button>
+        <button data-t="dark">다크</button>
+        <button data-t="system">시스템</button>
+      </div>
+    </div>
+    <div class="disclaimer">⚠ AI 검토 결과이며 최종 설계 판단은 담당 엔지니어의 확인이 필요합니다. 이 시스템은 설계를 승인하지 않습니다.</div>
+
+    <div class="content">
+      <h1 class="page">대시보드</h1>
+      <p class="lead">여러 설계 문서에 흩어진 <b>같은 설비의 정보</b>를 AI가 교차 검증하여, 문서 간 불일치와 그 영향이 미칠 수 있는 후속 설계 항목을 찾아냅니다.</p>
+
+      <div class="grid4">
+        <div class="card kpi"><div class="lbl">문서 수</div><div class="val">5</div></div>
+        <div class="card kpi"><div class="lbl">설비 수</div><div class="val">5</div></div>
+        <div class="card kpi"><div class="lbl">전체 이슈</div><div class="val">9</div></div>
+        <div class="card kpi"><div class="lbl">높음 위험도</div><div class="val hi">2</div></div>
+      </div>
+
+      <div class="card sec">
+        <h2>AI가 하는 일</h2>
+        <p class="sub">PDF·Excel·도면 등 서로 다른 형식의 설계 문서에서 동일한 설비 TAG를 찾아 정보를 연결하고, 문서 간 값의 불일치를 검토합니다.</p>
+        <div class="pipe">
+          <span class="step">문서 업로드</span><span class="arw">→</span>
+          <span class="step">설비 TAG 인식</span><span class="arw">→</span>
+          <span class="step">정보 추출</span><span class="arw">→</span>
+          <span class="step">문서 간 교차검증</span><span class="arw">→</span>
+          <span class="step">불일치 탐지</span><span class="arw">→</span>
+          <span class="step">영향 가능 항목 확인</span>
+        </div>
+        <div class="roles">
+          <div class="role ai"><b>AI가 하는 일</b><ul><li>문서 내용 이해</li><li>설비 TAG 식별</li><li>관련 값 추출</li></ul></div>
+          <div class="role eng"><b>검증 엔진이 하는 일</b><ul><li>수치 비교</li><li>단위 환산·비교</li><li>일치 / 불일치 판정</li></ul></div>
+        </div>
+        <p class="note">AI가 문서에서 값을 추출하고, 수치 비교와 일치 여부 판정은 별도의 검증 로직이 수행합니다. AI가 임의의 숫자를 만들어내지 않습니다.</p>
+      </div>
+
+      <div class="row2">
+        <div class="card">
+          <h2 style="font-size:14px;font-weight:650;margin:0">위험도 분포</h2>
+          <p class="sub">위험도별 발견된 이슈 수 (높음 · 중간 · 낮음 · 참고)</p>
+          <div class="bars">
+            <div class="bar"><span>높음</span><span class="track"><i class="fill" style="width:40%;background:var(--hi)"></i></span><span class="n">2</span></div>
+            <div class="bar"><span>중간</span><span class="track"><i class="fill" style="width:80%;background:var(--md)"></i></span><span class="n">4</span></div>
+            <div class="bar"><span>낮음</span><span class="track"><i class="fill" style="width:40%;background:var(--lo)"></i></span><span class="n">2</span></div>
+            <div class="bar"><span>참고</span><span class="track"><i class="fill" style="width:20%;background:var(--info)"></i></span><span class="n">1</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 style="font-size:14px;font-weight:650;margin:0">검토 진행</h2>
+          <p class="sub">담당 엔지니어가 확인·조치한 이슈</p>
+          <div class="prog-num">9개 발견 이슈 중 <span class="ok">2개 검토 완료</span></div>
+          <div class="prog"><i style="width:22%"></i></div>
+          <div class="prog-legend"><span>검토 전 <b>7</b></span><span>검토 완료 <b>2</b></span></div>
+        </div>
+      </div>
+
+      <div class="card sec">
+        <h2>AI 발견 사항 (9건)</h2>
+        <p class="sub">문서 간 불일치·누락 항목 (위험도 순). 행을 클릭하면 상세 검토 화면이 열립니다.</p>
+        <div class="find" id="findList"></div>
+      </div>
+
+      <p class="foot-disc">
+        이 페이지는 발표·심사용 <b>정적 데모</b>입니다. 실제 문서 업로드 → AI 추출 → 교차검증은 로컬 실행 버전에서 동작하며,
+        데모 데이터셋(설비 5 · 문서 5 · 이슈 9)을 그대로 재현했습니다.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"></aside>
+
+<script>
+const PARAM_LABEL = { Power:"정격출력", Voltage:"정격전압", "Cable Size":"케이블 규격", "Breaker Size":"차단기 용량", Model:"모델명", Flow:"유량", Efficiency:"효율", Weight:"중량" };
+const TYPE_LABEL = { value_mismatch:"값 불일치", spec_mismatch:"사양 불일치", missing:"필수 항목 누락", unit_mismatch:"단위/자릿수 불일치" };
+const DISP_LABEL = { open:"미검토", intentional:"의도된 차이", action_required:"조치 필요", resolved:"조치 완료" };
+const SEV_LABEL = { HIGH:"높음", MEDIUM:"중간", LOW:"낮음", INFO:"참고" };
+const DOC_LABEL = {
+  "Motor_Spec.pdf":"장비 사양서", "Electrical_Drawing.pdf":"전기 도면",
+  "Load_Calculation.xlsx":"부하 계산서", "Equipment_List.xlsx":"설비 목록", "P&ID.pdf":"P&ID"
+};
+
+function mkIssue(o){
+  o.parameter_label = PARAM_LABEL[o.parameter] || o.parameter;
+  return o;
+}
+
+const ISSUES = [
+  mkIssue({
+    tag:"M-101", parameter:"Power", issue_type:"value_mismatch", severity:"HIGH", disposition:"open",
+    title:"정격출력이 문서마다 다르게 기재되어 있습니다",
+    description:"M-101의 정격출력이 장비 사양서에는 15 kW, 부하 목록에는 18.5 kW, 전기 도면에는 15 kW로 기재되어 있습니다. 사양서·도면과 부하 목록의 값이 서로 다릅니다.",
+    reasoning:"정격출력은 전동기의 전류를 계산하는 출발점입니다. 15 kW와 18.5 kW는 전류로 환산하면 약 20% 차이가 나며, 이 값에 따라 케이블 굵기와 차단기 용량이 달라질 수 있습니다. 어느 값이 맞는지는 담당 엔지니어의 확인이 필요합니다.",
+    evidence:[
+      {document:"Motor_Spec.pdf", location:"p.12", value:"15", unit:"kW"},
+      {document:"Electrical_Drawing.pdf", location:"Dwg E-101", value:"15", unit:"kW"},
+      {document:"Load_Calculation.xlsx", location:"Sheet1!B4", value:"18.5", unit:"kW"},
+    ],
+    impact_items:["전동기 정격전류(A) 재계산","케이블 굵기 산정","차단기 용량 선정","배전반 부하 집계"],
+  }),
+  mkIssue({
+    tag:"M-102", parameter:"Power", issue_type:"value_mismatch", severity:"HIGH", disposition:"open",
+    title:"정격출력이 전기 도면에서만 다르게 기재되어 있습니다",
+    description:"M-102의 정격출력이 장비 사양서와 설비 목록에는 11 kW로 일치하지만, 전기 도면에는 15 kW로 기재되어 있습니다. 도면만 값이 다릅니다.",
+    reasoning:"두 문서가 11 kW로 일치하고 도면 한 곳만 15 kW이므로 도면의 오기재 가능성이 있습니다. 다만 도면 값을 기준으로 케이블·차단기가 이미 선정되었다면 실제 부하보다 과다 산정되었을 수 있어 확인이 필요합니다.",
+    evidence:[
+      {document:"Motor_Spec.pdf", location:"p.14", value:"11", unit:"kW"},
+      {document:"Equipment_List.xlsx", location:"Row 4", value:"11", unit:"kW"},
+      {document:"Electrical_Drawing.pdf", location:"Dwg E-102", value:"15", unit:"kW"},
+    ],
+    impact_items:["전동기 정격전류(A) 재계산","케이블 굵기 산정","차단기 용량 선정"],
+  }),
+  mkIssue({
+    tag:"P-101", parameter:"Cable Size", issue_type:"value_mismatch", severity:"MEDIUM", disposition:"action_required",
+    title:"케이블 굵기가 도면과 설비 목록에서 다릅니다",
+    description:"P-101의 전원 케이블 굵기가 설비 목록에는 25 mm², 전기 도면에는 35 mm²로 기재되어 있습니다.",
+    reasoning:"케이블 굵기가 다르면 허용 전류와 전압 강하 계산 결과가 달라지고, 전선관 규격에도 영향을 줍니다. 두 값 중 어느 것이 최신 설계인지 확인이 필요합니다.",
+    evidence:[
+      {document:"Equipment_List.xlsx", location:"Row 7", value:"25", unit:"mm2"},
+      {document:"Electrical_Drawing.pdf", location:"Dwg E-201", value:"35", unit:"mm2"},
+    ],
+    impact_items:["허용 전류 확인","전압 강하 계산","전선관 규격 산정"],
+    reviewed_by:"김설계 (전기)",
+    review_comment:"부하 증가로 케이블을 35 mm²로 상향한 변경이 설비 목록에 반영되지 않은 것으로 확인. 설비 목록 갱신 요청함 (DCR-2024-018). 갱신 확인 후 조치 완료로 전환 예정.",
+  }),
+  mkIssue({
+    tag:"P-101", parameter:"Breaker Size", issue_type:"value_mismatch", severity:"MEDIUM", disposition:"open",
+    title:"차단기 용량이 도면과 설비 목록에서 다릅니다",
+    description:"P-101의 차단기 용량이 설비 목록에는 50 A, 전기 도면에는 63 A로 기재되어 있습니다.",
+    reasoning:"케이블 굵기 불일치와 함께 나타나는 것으로 보아 같은 설계 변경에서 비롯되었을 가능성이 있습니다. 차단기 용량은 과전류 보호 협조와 배전반 차단 용량 검토에 사용됩니다.",
+    evidence:[
+      {document:"Equipment_List.xlsx", location:"Row 7", value:"50", unit:"A"},
+      {document:"Electrical_Drawing.pdf", location:"Dwg E-201", value:"63", unit:"A"},
+    ],
+    impact_items:["과전류 보호 협조","배전반 차단 용량 검토"],
+  }),
+  mkIssue({
+    tag:"P-102", parameter:"Model", issue_type:"spec_mismatch", severity:"MEDIUM", disposition:"open",
+    title:"같은 설비의 모델명이 문서마다 다릅니다",
+    description:"P-102의 모델명이 설비 목록에는 CR32-4, P&ID에는 CR64-4로 기재되어 있습니다.",
+    reasoning:"CR32와 CR64는 유량·양정 곡선이 다른 별개의 펌프 모델입니다. 어느 쪽이 실제 설치 대상인지에 따라 성능 검토와 예비품 조달 기준이 달라집니다.",
+    evidence:[
+      {document:"Equipment_List.xlsx", location:"Row 8", value:"CR32-4", unit:null},
+      {document:"P&ID.pdf", location:"Dwg P-202", value:"CR64-4", unit:null},
+    ],
+    impact_items:["펌프 성능 곡선 확인","예비품·부품 조달 기준","정비 매뉴얼 기준"],
+  }),
+  mkIssue({
+    tag:"AHU-101", parameter:"Power", issue_type:"value_mismatch", severity:"MEDIUM", disposition:"open",
+    title:"정격출력이 전기 도면에서만 다르게 기재되어 있습니다",
+    description:"AHU-101의 정격출력이 설비 목록과 장비 사양서에는 15 kW, 전기 도면에는 18.5 kW로 기재되어 있습니다.",
+    reasoning:"M-101과 유사한 형태의 불일치입니다. 도면 값(18.5 kW)이 반영되어 케이블·차단기가 선정되었는지, 아니면 사양서 값(15 kW)이 맞는지 확인이 필요합니다.",
+    evidence:[
+      {document:"Equipment_List.xlsx", location:"Row 12", value:"15", unit:"kW"},
+      {document:"Motor_Spec.pdf", location:"p.27", value:"15", unit:"kW"},
+      {document:"Electrical_Drawing.pdf", location:"Dwg E-115", value:"18.5", unit:"kW"},
+    ],
+    impact_items:["팬 정격전류(A) 재계산","케이블 굵기 산정","차단기 용량 선정"],
+  }),
+  mkIssue({
+    tag:"P-101", parameter:"Flow", issue_type:"value_mismatch", severity:"LOW", disposition:"open",
+    title:"유량 값이 문서 간에 근소하게 다릅니다",
+    description:"P-101의 유량이 설비 목록에는 120 m³/h, P&ID에는 125 m³/h로 기재되어 있습니다. 차이는 약 4%입니다.",
+    reasoning:"차이가 크지 않아 반올림이나 단순 표기 차이일 수 있으나, 값 자체가 다르므로 검토 목록에 포함했습니다. 펌프 선정 및 배관 유속 검토의 기준값입니다.",
+    evidence:[
+      {document:"Equipment_List.xlsx", location:"Row 7", value:"120", unit:"m3/h"},
+      {document:"P&ID.pdf", location:"Dwg P-201", value:"125", unit:"m3/h"},
+    ],
+    impact_items:["펌프 선정 적정성","배관 유속·구경 검토"],
+  }),
+  mkIssue({
+    tag:"P-102", parameter:"Efficiency", issue_type:"missing", severity:"LOW", disposition:"open",
+    title:"효율 값이 어느 문서에도 없습니다",
+    description:"P-102의 효율이 업로드된 문서 어디에도 기재되어 있지 않습니다. 같은 유형인 M-101, M-102에는 효율 값이 있습니다.",
+    reasoning:"값이 서로 충돌하는 것은 아니지만, 같은 종류의 다른 설비에는 있는 항목이 빠져 있어 문서 누락으로 표시했습니다. 소비전력과 부하 계산 정확도 확인에 사용됩니다.",
+    evidence:[
+      {document:"Motor_Spec.pdf", location:"p.19", value:"(기재 없음)", unit:null},
+      {document:"Equipment_List.xlsx", location:"Row 8", value:"(기재 없음)", unit:null},
+    ],
+    impact_items:["소비전력 재확인","부하 계산 정확도"],
+  }),
+  mkIssue({
+    tag:"AHU-101", parameter:"Weight", issue_type:"missing", severity:"INFO", disposition:"intentional",
+    title:"중량이 한 문서에서만 확인됩니다",
+    description:"AHU-101의 중량(450 kg)은 설비 목록에만 있고 다른 문서에는 비교할 값이 없습니다.",
+    reasoning:"교차검증할 두 번째 출처가 없어 값이 맞는지 시스템이 판단할 수 없습니다. 참고 정보로만 표시합니다.",
+    evidence:[
+      {document:"Equipment_List.xlsx", location:"Row 12", value:"450", unit:"kg"},
+    ],
+    impact_items:["구조 하중 검토","양중·설치 계획"],
+    reviewed_by:"이검토 (기계)",
+    review_comment:"중량은 설비 목록이 유일한 공식 출처이며 제조사 카탈로그(450 kg)와 일치 확인. 단일 출처는 의도된 것으로, 구조·양중 검토는 이 값 기준으로 진행하면 됨. 추가 조치 불필요.",
+  }),
+];
+
+function fmtVal(v, u){ return u ? `${v} ${u}` : v; }
+function mismatchSummary(iss){
+  if (iss.issue_type === "missing") return null;
+  const seen = [];
+  iss.evidence.forEach(e => { const l = fmtVal(e.value, e.unit); if (!seen.includes(l)) seen.push(l); });
+  return seen.length >= 2 ? seen.join("  ↔  ") : null;
+}
+
+function renderList(){
+  const el = document.getElementById("findList");
+  el.innerHTML = ISSUES.map((iss, i) => {
+    const diff = mismatchSummary(iss);
+    const disp = iss.disposition !== "open"
+      ? `<span class="disp ${iss.disposition}">${DISP_LABEL[iss.disposition]}</span>` : "";
+    return `<button onclick="openDrawer(${i})">
+      <div style="min-width:0">
+        <div class="chips">
+          <span class="sev ${iss.severity}">${SEV_LABEL[iss.severity]}</span>
+          <span class="tag">${iss.tag}</span>
+          ${disp}
+        </div>
+        <div class="ttl">${iss.title}</div>
+        ${diff ? `<div class="diff">${diff}</div>` : ""}
+      </div>
+      <span class="impact-n">영향 가능 항목 ${iss.impact_items.length}개</span>
+    </button>`;
+  }).join("");
+}
+
+function openDrawer(i){
+  const iss = ISSUES[i];
+  const diff = mismatchSummary(iss);
+  const isMissing = iss.issue_type === "missing";
+  const distinct = [...new Set(iss.evidence.map(e => fmtVal(e.value, e.unit)))];
+
+  const rows = iss.evidence.map(e => {
+    const label = fmtVal(e.value, e.unit);
+    const differ = !isMissing && distinct.length > 1;
+    const emph = differ && distinct.indexOf(label) === distinct.length - 1;
+    return `<tr>
+      <td>${DOC_LABEL[e.document] || e.document}<div style="font-size:11px;color:var(--muted)" class="mono">${e.location ?? "-"}</div></td>
+      <td class="v${differ ? " diff" : ""}"${emph ? ' style="font-weight:700"' : ""}>${label}</td>
+    </tr>`;
+  }).join("");
+
+  const chain = [`${iss.tag} ${iss.parameter_label}`, ...iss.impact_items];
+  const flow = chain.map((n, k) =>
+    `<div class="node${k===0?" root":""}">${n}</div>${k < chain.length-1 ? '<div class="dn">↓</div>' : ""}`
+  ).join("");
+
+  const reviewBlock = (iss.disposition !== "open" || iss.review_comment)
+    ? `<div class="review">
+         <div class="meta"><b style="color:var(--fg)">${DISP_LABEL[iss.disposition]}</b>${iss.reviewed_by ? " · 검토자 " + iss.reviewed_by : ""}</div>
+         ${iss.review_comment ? iss.review_comment : ""}
+       </div>`
+    : `<div class="review"><span class="empty">아직 검토되지 않았습니다. (로컬 실행 버전에서 상태 변경·의견 입력 가능)</span></div>`;
+
+  document.getElementById("drawer").innerHTML = `
+    <div class="dh">
+      <button class="x" onclick="closeDrawer()">×</button>
+      <div class="chips">
+        <span class="sev ${iss.severity}">${SEV_LABEL[iss.severity]}</span>
+        <span class="tag">${iss.tag}</span>
+        <span style="font-size:12px;color:var(--muted)">${TYPE_LABEL[iss.issue_type] || iss.issue_type}</span>
+        <span class="tag">${iss.parameter_label}</span>
+        ${iss.disposition !== "open" ? `<span class="disp ${iss.disposition}">${DISP_LABEL[iss.disposition]}</span>` : ""}
+      </div>
+      <h3>${iss.title}</h3>
+      <p>${iss.description}</p>
+    </div>
+    <div class="db">
+      <section>
+        <h4>문서별 값 비교</h4>
+        ${isMissing
+          ? `<div class="callout miss">누락 — 업로드된 문서에서 값을 찾지 못했습니다.</div>`
+          : (diff ? `<div class="callout mis">불일치 &nbsp; <span class="mono">${diff}</span></div>` : "")}
+        <table class="vt"><thead><tr><th>문서</th><th>기재된 값</th></tr></thead><tbody>${rows}</tbody></table>
+        <p class="src-hint">각 값은 어느 문서 어디에서 추출됐는지(위치)와 함께 표시됩니다. <span style="opacity:.8">데모 데이터 기반 예시 위치입니다.</span></p>
+      </section>
+
+      <section>
+        <h4>왜 중요한가?</h4>
+        <div class="why">${iss.reasoning}</div>
+      </section>
+
+      <section>
+        <h4>영향 가능 항목</h4>
+        <div class="flow">${flow}</div>
+        <div class="flow-note">영향 가능 항목은 검토 우선순위를 제시하기 위한 참고 정보이며, 최종 설계 판단은 담당 엔지니어의 확인이 필요합니다.</div>
+      </section>
+
+      <section>
+        <h4>검증 방식</h4>
+        <div class="verify">
+          <div class="a"><b>AI</b><div style="margin-top:4px">문서 내용 이해 · 설비 TAG 식별 · 값 추출</div></div>
+          <div class="e"><b>검증 엔진</b><div style="margin-top:4px">수치 비교 · 단위 환산 · 불일치 판정</div></div>
+        </div>
+        <p class="note">AI가 문서에서 값을 읽어오고, 값이 서로 같은지 다른지는 별도의 검증 로직이 계산합니다.</p>
+      </section>
+
+      <section>
+        <h4>엔지니어 검토 — 상태 및 의견</h4>
+        ${reviewBlock}
+      </section>
+
+      <p class="foot-disc">이 화면의 분석은 검토를 돕기 위한 참고 자료입니다. AI는 설계를 확정하거나 승인하지 않으며, 최종 판단은 담당 엔지니어가 합니다.</p>
+    </div>`;
+
+  document.getElementById("drawer").classList.add("show");
+  document.getElementById("scrim").classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+function closeDrawer(){
+  document.getElementById("drawer").classList.remove("show");
+  document.getElementById("scrim").classList.remove("show");
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+/* theme */
+function applyTheme(t){
+  const dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", dark);
+  document.querySelectorAll("#themeSeg button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+}
+let theme = "system";
+try { theme = localStorage.getItem("demo-theme") || "system"; } catch(e){}
+document.getElementById("themeSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  theme = b.dataset.t;
+  try { localStorage.setItem("demo-theme", theme); } catch(e){}
+  applyTheme(theme);
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (theme === "system") applyTheme("system"); });
+applyTheme(theme);
+
+renderList();
+</script>
+</body>
+</html>

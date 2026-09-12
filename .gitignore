@@ -21,3 +21,6 @@ backend/storage/uploads/*
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Claude Code local tool config (per-machine, not project-shared)
+.claude/
