@@ -1,0 +1,5 @@
+﻿△△ 폐수처리시설 개선사업 - 공정 설계 데이터 / PR-CALC-003 Rev.B
+TAG,Service,Flow(m3/h),Head(m),DesignTemp(C),Source
+P-101,Transfer Pump Duty,125,45,35,Process Design Basis
+P-102,Transfer Pump Standby,120,45,35,Process Design Basis
+M-101,Agitator Motor,,,35,Mechanical Specification
